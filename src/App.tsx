@@ -1,4 +1,4 @@
-import { Space, Button, Form, Input } from 'antd';
+import { Space, Button, Form, Input, Checkbox } from 'antd';
 import type { FormProps } from 'antd';
 import { useEffect, useState } from 'react';
 import DataTable from './components/DataTable';
@@ -8,6 +8,7 @@ export type FieldType = {
   task: string
   description: string
   completed: boolean
+  priority: boolean
 };
 
 const { TextArea } = Input;
@@ -26,6 +27,7 @@ function App() {
     try {
       if (storedTasks) {
         setTasks(JSON.parse(storedTasks))
+       
       }
     } catch (error) {
       console.log(error)
@@ -44,7 +46,7 @@ function App() {
   }, [tasks])
 
   const onFinish: FormProps<FieldType>['onFinish'] = (values) => {
-    setTasks((prevTasks) => [...prevTasks, { ...values, id: new Date().toISOString(), completed: false }])
+    setTasks((prevTasks) => [...prevTasks, { ...values, id: new Date().toISOString(), completed: false, priority: values.priority || false }])
     form.resetFields()
   };
 
@@ -71,14 +73,15 @@ function App() {
     )
   }
 
-  const filteredTasks = tasks.filter((task) =>
-    task.task.toLowerCase().includes(searchQuery.toLowerCase())
-  )
+  const filteredTasks = tasks
+    .filter((task) => task.task.toLowerCase().includes(searchQuery.toLowerCase()))
+    .sort((a, b) => Number(b.priority) - Number(a.priority))
+
 
   const onFinishFailed: FormProps<FieldType>['onFinishFailed'] = (errorInfo) => {
     console.log('Failed:', errorInfo);
   };
-
+  console.log(tasks)
   return (
     <main className='px-4 lg:px-0'>
       <div className="min-h-screen mx-auto container">
@@ -113,6 +116,17 @@ function App() {
             >
               <TextArea autoSize={{ minRows: 4, maxRows: 8 }} />
             </Form.Item>
+
+            <Form.Item<FieldType>
+              label='Prioritize
+'             name='priority'
+              valuePropName='checked'
+            >
+              <Checkbox>
+                Prioritize this task
+              </Checkbox>
+            </Form.Item>
+
             <Form.Item label={null}>
               <Button type="primary" htmlType="submit">
                 Submit

@@ -3,6 +3,7 @@ import React from "react";
 import { FieldType } from "../App";
 import { MdDelete } from "react-icons/md";
 import { FaEdit } from "react-icons/fa";
+import { FcHighPriority } from "react-icons/fc";
 
 
 type DataTableProps = {
@@ -14,15 +15,22 @@ type DataTableProps = {
 
 const columns = (onEdit: (task: FieldType) => void, onDelete: (task: FieldType) => void, toggleCompletion: (taskId: string) => void) => [
     {
+        title: 'Priority',
+        dataIndex: 'priority',
+        key: 'priority',
+        render: (priority: boolean) =>
+            priority && <FcHighPriority />
+    },
+    {
         title: '',
         dataIndex: '',
         key: 'task',
         width: '5%',
-        render: (_:boolean, record:FieldType) => (
+        render: (_: boolean, record: FieldType) => (
             <>
-                <Checkbox 
-                checked={record.completed} 
-                onChange={()=> toggleCompletion(record.id)}
+                <Checkbox
+                    checked={record.completed}
+                    onChange={() => toggleCompletion(record.id)}
                 />
             </>
         )
@@ -31,7 +39,7 @@ const columns = (onEdit: (task: FieldType) => void, onDelete: (task: FieldType) 
         title: 'Task name',
         dataIndex: 'task',
         key: 'task',
-        width: '30%'
+        width: '25%'
     },
     {
         title: 'Task description',
@@ -67,7 +75,9 @@ const DataTable: React.FC<DataTableProps> = ({ tasks, onEdit, onDelete, toggleCo
                 dataSource={tasks}
                 columns={columns(onEdit, onDelete, toggleCompletion)}
                 rowKey="id"
-                rowClassName={(record)=>(record.completed ? 'bg-emerald-500/50 text-white line-through hover:text-black':'')}
+                rowClassName={(record) => (
+                    record.priority ? `bg-red-400/10 ${record.completed && 'line-through'}`
+                        : record.completed ? 'bg-emerald-500/50 text-white line-through hover:text-black' : '')}
             />
         </div>
     )
