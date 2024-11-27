@@ -8,12 +8,12 @@ import { FcHighPriority } from "react-icons/fc";
 
 type DataTableProps = {
     tasks: FieldType[]
-    onEdit: (task: FieldType) => void
+    onEdit: (task:FieldType) => void
     onDelete: (task: FieldType) => void
     toggleCompletion: (taskId: string) => void
 };
 
-const columns = (onEdit: (task: FieldType) => void, onDelete: (task: FieldType) => void, toggleCompletion: (taskId: string) => void) => [
+const columns = (onEdit: (task:FieldType) => void, onDelete: (task: FieldType) => void, toggleCompletion: (taskId: string) => void) => [
     {
         title: 'Priority',
         dataIndex: 'priority',

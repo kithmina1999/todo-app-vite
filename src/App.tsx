@@ -1,7 +1,11 @@
-import { Space, Button, Form, Input, Checkbox } from 'antd';
+import { Button, Form, Input } from 'antd';
 import type { FormProps } from 'antd';
 import { useEffect, useState } from 'react';
 import DataTable from './components/DataTable';
+import Modal from './components/Modal';
+import { useModal } from './hooks/useModal';
+import AddTaskForm from './components/AddTaskForm';
+import EditTaskForm from './components/EditTaskForm';
 
 export type FieldType = {
   id: string
@@ -11,13 +15,14 @@ export type FieldType = {
   priority: boolean
 };
 
-const { TextArea } = Input;
+
 
 function App() {
-
   const [form] = Form.useForm()
-
+  const AddTaskModal = useModal()
+  const EditTaskModal = useModal()
   const [tasks, setTasks] = useState<FieldType[]>([]);
+  const [currentTask, setCurrentTask] = useState<FieldType | null>();
   const [searchQuery, setSearchQuery] = useState<string>('')
 
   //for initail data load
@@ -27,7 +32,7 @@ function App() {
     try {
       if (storedTasks) {
         setTasks(JSON.parse(storedTasks))
-       
+
       }
     } catch (error) {
       console.log(error)
@@ -48,14 +53,24 @@ function App() {
   const onFinish: FormProps<FieldType>['onFinish'] = (values) => {
     setTasks((prevTasks) => [...prevTasks, { ...values, id: new Date().toISOString(), completed: false, priority: values.priority || false }])
     form.resetFields()
+    AddTaskModal.closeModal()
   };
 
-  const onEdit = (task: FieldType) => {
-    form.setFieldsValue({
-      task: task.task,
-      description: task.description,
-    });
-    setTasks((prevTasks) => prevTasks.filter((t) => t.id !== task.id))
+  const hadnleEdit = (task: FieldType) => {
+    EditTaskModal.openModal()
+    setCurrentTask(task)
+  }
+
+  const onEdit = (values: FieldType) => {
+    //replace task by matching ids
+    console.log(values)
+    setTasks((prevTasks) =>
+      prevTasks.map((task) =>
+        task.id === values.id ? { ...task, ...values } : task
+      )
+    );
+
+    EditTaskModal.closeModal()
   }
 
   const onDelete = (task: FieldType) => {
@@ -78,62 +93,31 @@ function App() {
     .sort((a, b) => Number(b.priority) - Number(a.priority))
 
 
-  const onFinishFailed: FormProps<FieldType>['onFinishFailed'] = (errorInfo) => {
-    console.log('Failed:', errorInfo);
-  };
   console.log(tasks)
   return (
-    <main className='px-4 lg:px-0'>
+    <main className=''>
+      <Modal
+        title='New task'
+        isOpen={AddTaskModal.isOpen}
+        onClose={AddTaskModal.closeModal}>
+        <AddTaskForm onFinish={onFinish} />
+      </Modal>
+      <Modal
+        title='Edit task'
+        isOpen={EditTaskModal.isOpen}
+        onClose={EditTaskModal.closeModal}>
+        <EditTaskForm onEdit={onEdit} form={form} currentTask={currentTask} />
+      </Modal>
       <div className="min-h-screen mx-auto container">
-        <div className=" my-12">
+
+        <div className=" my-12 flex justify-between items-center">
           <h1 className="text-5xl font-bold text-center lg:text-start">Todo App</h1>
+          <Button type='primary' onClick={AddTaskModal.openModal}>
+            Add Task
+          </Button>
         </div>
 
-        <Space className=' w-full  py-1 flex justify-center lg:justify-start'>
-          <Form
-            className='w-[50vw]'
-            form={form}
-            name='basic'
-            labelCol={{ span: 25 }}
-            wrapperCol={{ span: 55 }}
-            style={{ width: '60vw' }}
-            initialValues={{ remember: true }}
-            onFinish={onFinish}
-            onFinishFailed={onFinishFailed}
-          >
 
-            <Form.Item<FieldType>
-              label="Task Name"
-              name="task"
-              rules={[{ required: true, message: 'Enter your task name' }]}
-            >
-              <Input />
-            </Form.Item>
-            <Form.Item<FieldType>
-              label="Task Description"
-              name="description"
-              rules={[{ required: true, message: 'Enter your task descripiton' }]}
-            >
-              <TextArea autoSize={{ minRows: 4, maxRows: 8 }} />
-            </Form.Item>
-
-            <Form.Item<FieldType>
-              label='Prioritize
-'             name='priority'
-              valuePropName='checked'
-            >
-              <Checkbox>
-                Prioritize this task
-              </Checkbox>
-            </Form.Item>
-
-            <Form.Item label={null}>
-              <Button type="primary" htmlType="submit">
-                Submit
-              </Button>
-            </Form.Item>
-          </Form>
-        </Space>
 
         <div className='my-20'>
           <h1 className='text-3xl font-semibold text-center lg:text-start'>
@@ -149,7 +133,7 @@ function App() {
               style={{ width: '300px' }}
             />
           </div>
-          <DataTable tasks={filteredTasks} onDelete={onDelete} onEdit={onEdit} toggleCompletion={toggleCompletion} />
+          <DataTable tasks={filteredTasks} onDelete={onDelete} onEdit={hadnleEdit} toggleCompletion={toggleCompletion} />
 
 
         </div>
